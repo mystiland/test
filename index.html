@@ -3,139 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detailní Widget Serveru</title>
+    <title>Mystiland.eu - Minecraft Server</title>
     <style>
+        /* Základní styly */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            background-color: #0f172a;
-            color: #f8fafc;
+            background-color: #0b090a;
+            color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            overflow: hidden; /* Zamezí scrollování během načítání */
         }
 
+        /* -------------------------------------------------- */
+        /* 1. NAČÍTACÍ OBRAZOVKA (PRELOADER) */
+        /* -------------------------------------------------- */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #120d08;
+            /* Vzor na pozadí podle tvého obrázku */
+            background-image: radial-gradient(#1c140d 15%, transparent 16%),
+                              radial-gradient(#1c140d 15%, transparent 16%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        /* Animované logo (polygon) podle přiloženého obrázku */
+        .loader-logo {
+            width: 90px;
+            height: 90px;
+        }
+
+        .loader-logo path {
+            fill: none;
+            stroke: #ffffff;
+            stroke-width: 3;
+            stroke-dasharray: 400;
+            stroke-dashoffset: 400;
+            animation: draw 2s linear infinite;
+        }
+
+        @keyframes draw {
+            0% {
+                stroke-dashoffset: 400;
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                stroke-dashoffset: 0;
+                opacity: 0.3;
+            }
+        }
+
+        /* Třída pro skrytí preloaderu */
+        #preloader.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* -------------------------------------------------- */
+        /* 2. HLAVNÍ OBSAH STRÁNKY */
+        /* -------------------------------------------------- */
+        .main-content {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s;
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+        }
+
+        /* Zobrazení hlavního obsahu po načtení */
+        body.loaded .main-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        body.loaded {
+            overflow: auto; /* Povolí scrollování po načtení */
+        }
+
+        /* Karta serveru */
         .server-card {
-            background-color: #1e293b;
-            padding: 2rem;
+            background-color: #1a1614;
+            border: 1px solid #2e2620;
             border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            width: 350px;
+            padding: 2rem;
             text-align: center;
-            border: 1px solid #334155;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
         }
 
         .server-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 8px;
-            margin-bottom: 12px;
+            width: 72px;
+            height: 72px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
 
-        .server-name {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin: 0 0 5px 0;
+        .server-title {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            color: #f3f4f6;
         }
 
         .version-badge {
-            background-color: #3b82f6;
+            background-color: #d97706;
             color: #fff;
             font-size: 0.8rem;
-            padding: 3px 8px;
+            font-weight: bold;
+            padding: 4px 10px;
             border-radius: 12px;
             display: inline-block;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
-        .motd {
-            background-color: #0f172a;
-            padding: 10px;
+        .motd-box {
+            background-color: #0d0b0a;
+            border: 1px solid #221c17;
+            padding: 12px;
             border-radius: 8px;
-            font-size: 0.9rem;
-            color: #94a3b8;
-            margin-bottom: 15px;
-            min-height: 40px;
+            font-size: 0.95rem;
+            color: #a1a1aa;
+            margin-bottom: 20px;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .stat-group {
+        .stats-box {
+            background-color: #0d0b0a;
+            border: 1px solid #221c17;
+            padding: 15px;
+            border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #0f172a;
-            padding: 12px 15px;
-            border-radius: 8px;
+            margin-bottom: 20px;
         }
 
-        .stat-value {
-            font-size: 1.2rem;
+        .player-count {
+            font-size: 1.3rem;
             font-weight: bold;
-            color: #38bdf8;
+            color: #22c55e;
         }
 
-        .status-online { color: #4ade80; }
-        .status-offline { color: #f87171; }
+        /* Tlačítko pro kopírování IP */
+        .copy-btn {
+            background-color: #d97706;
+            color: #ffffff;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background-color: #b45309;
+        }
     </style>
 </head>
 <body>
 
-    <div class="server-card">
-        <!-- Ikona serveru -->
-        <img id="server-icon" class="server-icon" src="https://api.mcsrvstat.us/icon/mystiland.eu" alt="Server Icon">
-
-        <h2 class="server-name">Mystiland.eu</h2>
-        <span id="server-version" class="version-badge">Načítání...</span>
-
-        <!-- Popisek serveru (MOTD) -->
-        <div id="server-motd" class="motd">Načítání popisu...</div>
-
-        <!-- Počet hráčů -->
-        <div class="stat-group">
-            <span>Stav:</span>
-            <span id="server-players" class="stat-value">0 / 0</span>
-        </div>
+    <!-- 1. NAČÍTACÍ OBRAZOVKA (PRELOADER) -->
+    <div id="preloader">
+        <svg class="loader-logo" viewBox="0 0 100 100">
+            <!-- SVG tvar přibližně podle tvého obrázku -->
+            <path d="M 30 40 L 45 20 L 50 60 L 65 35 L 75 42 L 65 70 L 50 80 L 35 65 Z" />
+        </svg>
     </div>
 
-    <script>
-        async function loadAdvancedStats() {
-            const serverIP = 'mystiland.eu';
+    <!-- 2. HLAVNÍ STRÁNKA METODOU PO NAČTENÍ -->
+    <main class="main-content">
+        <div class="server-card">
+            <img id="server-icon" class="server-icon" src="https://api.mcsrvstat.us/icon/mystiland.eu" alt="Logo">
+            
+            <h1 class="server-title">Mystiland.eu</h1>
+            <span id="server-version" class="version-badge">Načítání...</span>
 
+            <div id="server-motd" class="motd-box">Načítání informací...</div>
+
+            <div class="stats-box">
+                <span>Hráči online:</span>
+                <span id="player-count" class="player-count">0 / 0</span>
+            </div>
+
+            <button class="copy-btn" onclick="copyIP()">Kopírovat IP adresu</button>
+        </div>
+    </main>
+
+    <script>
+        const serverIP = 'mystiland.eu';
+
+        // Načtení dat ze serveru
+        async function initPage() {
             try {
                 const response = await fetch(`https://api.mcsrvstat.us/3/${serverIP}`);
                 const data = await response.json();
 
                 if (data && data.online) {
-                    // Verze Minecraftu
-                    document.getElementById('server-version').textContent = data.version || 'Neznámá verze';
-
-                    // MOTD (Popis serveru) - vyčištěný od formátovacích znaků
+                    document.getElementById('server-version').textContent = data.version || 'Java & Bedrock';
                     if (data.motd && data.motd.clean) {
                         document.getElementById('server-motd').textContent = data.motd.clean.join(' ');
-                    } else {
-                        document.getElementById('server-motd').textContent = 'Bez popisu';
                     }
-
-                    // Hráči online
-                    const playersElement = document.getElementById('server-players');
-                    playersElement.textContent = `${data.players.online} / ${data.players.max}`;
-                    playersElement.className = 'stat-value status-online';
-
+                    document.getElementById('player-count').textContent = `${data.players.online} / ${data.players.max}`;
                 } else {
                     document.getElementById('server-version').textContent = 'OFFLINE';
                     document.getElementById('server-motd').textContent = 'Server je momentálně nedostupný.';
-                    
-                    const playersElement = document.getElementById('server-players');
-                    playersElement.textContent = 'Offline';
-                    playersElement.className = 'stat-value status-offline';
+                    document.getElementById('player-count').textContent = 'Offline';
                 }
             } catch (error) {
-                console.error('Chyba při načítání dat:', error);
-                document.getElementById('server-motd').textContent = 'Chyba připojení k API.';
+                console.error('Chyba při načítání:', error);
+            } finally {
+                // Po dokončení načtení dat skryjeme preloader s krátkou prodlevou pro plynulý efekt
+                setTimeout(() => {
+                    document.getElementById('preloader').classList.add('fade-out');
+                    document.body.classList.add('loaded');
+                }, 1000);
             }
         }
 
-        loadAdvancedStats();
+        // Kopírování IP adresy
+        function copyIP() {
+            navigator.clipboard.writeText(serverIP).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = 'IP adresa zkopírována!';
+                btn.style.backgroundColor = '#16a34a';
+
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.backgroundColor = '#d97706';
+                }, 2000);
+            });
+        }
+
+        // Spuštění po načtení dokumentu
+        window.addEventListener('load', initPage);
     </script>
 </body>
 </html>
