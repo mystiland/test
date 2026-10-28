@@ -1,0 +1,29 @@
+<!-- Místo, kam se číslo vypíše -->
+<div class="counter stat-value" id="player-count">0</div>
+<p class="stat-label">Hráčů online</p>
+
+<script>
+async function loadServerStats() {
+    try {
+        // Volání veřejné API pro zjištění stavu serveru (zde např. mc.darkup.cz)
+        const response = await fetch('https://api.mcsrvstat.us/3/mc.darkup.cz');
+        const data = await response.json();
+        
+        // Zkontrolujeme, zda je server online a zda API vrátilo data o hráčích
+        if (data && data.online) {
+            const onlinePlayers = data.players.online;
+            
+            // Dosadíme číslo do elementu na stránce
+            document.getElementById('player-count').textContent = onlinePlayers;
+        } else {
+            document.getElementById('player-count').textContent = 'Offline';
+        }
+    } catch (error) {
+        console.error('Nepodařilo se načíst data:', error);
+        document.getElementById('player-count').textContent = 'Chyba';
+    }
+}
+
+// Spuštění funkce po načtení stránky
+loadServerStats();
+</script>
